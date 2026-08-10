@@ -2,6 +2,8 @@
 - name: Pull and run w-bridge
   hosts: w_servers
   become: true
+  vars_files:
+    - ../group_vars/w_servers/vault.yml
   vars:
     w_bridge_registry: registry.example.com
     w_bridge_image_name: w-bridge
@@ -10,11 +12,11 @@
     w_bridge_app_dir: /opt/w-bridge
     w_bridge_env_path: "{{ w_bridge_app_dir }}/.env"
     w_bridge_ports: []
+    w_bridge_ports_normalized: "{{ (w_bridge_ports | from_yaml) if (w_bridge_ports is string) else w_bridge_ports }}"
     w_bridge_extra_run_args: ""
     secret_env_source: vault
     secret_env_url: ""
     secret_env_headers: {}
-    w_bridge_env_content: ""
 
   tasks:
     - name: Ensure app directory exists
@@ -26,11 +28,11 @@
     - name: Write .env from vaulted variable
       ansible.builtin.copy:
         dest: "{{ w_bridge_env_path }}"
-        content: "{{ w_bridge_env_content }}"
+        content: "{{ w_bridge_env_content | default('') }}"
         mode: "0600"
       when:
         - secret_env_source == 'vault'
-        - w_bridge_env_content | length > 0
+        - (w_bridge_env_content | default('') | length) > 0
       no_log: true
 
     - name: Download .env from remote secret URL
@@ -68,5 +70,5 @@
         state: started
         restart_policy: unless-stopped
         env_file: "{{ w_bridge_env_path }}"
-        published_ports: "{{ w_bridge_ports if w_bridge_ports | length > 0 else omit }}"
+        published_ports: "{{ w_bridge_ports_normalized if w_bridge_ports_normalized | length > 0 else omit }}"
         command: "{{ w_bridge_extra_run_args if w_bridge_extra_run_args | length > 0 else omit }}"
