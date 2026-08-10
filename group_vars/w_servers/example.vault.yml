@@ -1,0 +1,35 @@
+# Encrypt this file after filling values:
+# ansible-vault encrypt group_vars/w_servers/vault.yml
+
+# Required by playbooks/install_hermes.yml
+hermes_api_server_key: ""
+
+# Required by playbooks/docker_registry_login.yml
+docker_registry_url: ""
+docker_registry_username: ""
+docker_registry_password: ""
+
+# Required by playbooks/pull_w_bridge_image.yml and playbooks/run_w_bridge_container.yml
+w_bridge_registry: ""
+w_bridge_image_name: "w-bridge"
+w_bridge_image_tag: "ot"
+
+# Required by playbooks/run_w_bridge_container.yml when secret_env_source=vault
+w_bridge_env_content: |
+  BASE_URL=http://127.0.0.1:8642/v1
+  API_KEY={{ hermes_api_server_key }}
+  MODEL=deepseek-v4-flash
+  ROOM_BASE_URL=
+  PORT=80
+  RELOAD=True
+
+# Optional runtime container overrides
+w_bridge_ports:
+  - "8080:8080"
+w_bridge_command: []
+
+# Required by playbooks/run_campfire_container.yml
+campfire_secret_key_base: ""
+campfire_vapid_public_key: ""
+campfire_vapid_private_key: ""
+campfire_tls_domain: ""
