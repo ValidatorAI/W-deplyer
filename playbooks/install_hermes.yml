@@ -3,40 +3,66 @@
   hosts: w_servers
   become: true
   vars:
-    hermes_install_method: binary
-    hermes_binary_url: ""
-    hermes_binary_path: /usr/local/bin/hermes
+    hermes_user: "{{ ansible_user | default('root') }}"
+    hermes_home: "{{ ansible_env.HOME | default('/root') }}"
+    hermes_data_dir: "{{ hermes_home }}/.hermes"
 
   tasks:
-    - name: Ensure curl is installed for binary downloads
-      ansible.builtin.apt:
-        name: curl
-        state: present
-        update_cache: true
-      when: hermes_install_method == 'binary'
+    - name: Ensure Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
 
-    - name: Validate Hermes binary URL is set when using binary method
+    - name: Ensure Hermes API server key is provided via vars
       ansible.builtin.assert:
         that:
-          - hermes_binary_url | length > 0
-        fail_msg: "Set hermes_binary_url (for example with -e hermes_binary_url=https://example/hermes-linux-amd64)."
-      when: hermes_install_method == 'binary'
+          - hermes_api_server_key is defined
+          - hermes_api_server_key | length > 0
+        fail_msg: "Provide hermes_api_server_key via vars/inventory/extra-vars."
 
-    - name: Download Hermes binary
-      ansible.builtin.get_url:
-        url: "{{ hermes_binary_url }}"
-        dest: "{{ hermes_binary_path }}"
-        mode: "0755"
-        force: true
-      when: hermes_install_method == 'binary'
+    - name: Ensure Hermes data directory exists
+      ansible.builtin.file:
+        path: "{{ hermes_data_dir }}"
+        state: directory
+        mode: "0700"
+        owner: "{{ hermes_user }}"
+        group: "{{ hermes_user }}"
 
-    - name: Show Hermes version if installed
-      ansible.builtin.command: "{{ hermes_binary_path }} --version"
-      register: hermes_version
-      changed_when: false
-      failed_when: false
+    - name: Remove existing Hermes container if present
+      ansible.builtin.command: docker rm -f hermes
+      register: hermes_rm
+      changed_when: hermes_rm.rc == 0
+      failed_when: hermes_rm.rc != 0 and 'No such container' not in hermes_rm.stderr
 
-    - name: Display Hermes version output
+    - name: Run Hermes container
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - -d
+          - --name
+          - hermes
+          - --restart
+          - unless-stopped
+          - -v
+          - "{{ hermes_data_dir }}:/opt/data"
+          - -p
+          - 8642:8642
+          - -e
+          - API_SERVER_ENABLED=true
+          - -e
+          - API_SERVER_HOST=0.0.0.0
+          - -e
+          - "API_SERVER_KEY={{ hermes_api_server_key }}"
+          - -e
+          - API_SERVER_CORS_ORIGINS=*
+          - nousresearch/hermes-agent
+          - gateway
+          - run
+      register: hermes_container_run
+      changed_when: true
+      no_log: true
+
+    - name: Show Hermes container id
       ansible.builtin.debug:
-        var: hermes_version.stdout
-      when: hermes_version.stdout | length > 0
+        var: hermes_container_run.stdout
