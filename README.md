@@ -70,6 +70,10 @@ You can combine these with variables, for example:
 ```bash
 make hermes ANSIBLE_ARGS='--ask-vault-pass' EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY'
 ```
+for api server key you could use:
+```bash
+openssl rand -hex 32
+```
 
 ## Runtime Variables
 
