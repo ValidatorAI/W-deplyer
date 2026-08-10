@@ -3,9 +3,9 @@
   hosts: w_servers
   become: true
   vars:
-    w_bridge_registry: registry.example.com
+    w_bridge_registry: registry2.siavashmohammady.ir
     w_bridge_image_name: w-bridge
-    w_bridge_image_tag: latest
+    w_bridge_image_tag: ot
 
   tasks:
     - name: Pull w-bridge image
