@@ -3,7 +3,7 @@
   hosts: w_servers
   become: true
   vars:
-    docker_registry_url: registry.example.com
+    docker_registry_url: ""
     docker_registry_username: ""
     docker_registry_password: ""
 
