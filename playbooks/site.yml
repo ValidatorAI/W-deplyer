@@ -5,3 +5,4 @@
 - import_playbook: docker_registry_login.yml
 - import_playbook: pull_w_bridge_image.yml
 - import_playbook: run_w_bridge_container.yml
+- import_playbook: deploy_campfire.yml

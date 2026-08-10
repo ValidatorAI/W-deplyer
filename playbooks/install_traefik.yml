@@ -44,9 +44,15 @@
                 - --providers.docker.exposedbydefault=false
                 - --entrypoints.web.address=:80
                 - --entrypoints.websecure.address=:443
+              networks:
+                - w-network
               volumes:
                 - /var/run/docker.sock:/var/run/docker.sock:ro
                 - ./acme.json:/acme.json
+
+          networks:
+            w-network:
+              external: true
 
     - name: Start Traefik
       ansible.builtin.command:

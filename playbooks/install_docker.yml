@@ -74,6 +74,11 @@
         state: started
         enabled: true
 
+    - name: Ensure w-network Docker network exists
+      community.docker.docker_network:
+        name: w-network
+        state: present
+
     - name: Add configured users to docker group
       ansible.builtin.user:
         name: "{{ item }}"

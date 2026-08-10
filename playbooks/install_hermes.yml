@@ -6,6 +6,7 @@
     hermes_user: "{{ ansible_user | default('root') }}"
     hermes_home: "{{ ansible_env.HOME | default('/root') }}"
     hermes_data_dir: "{{ hermes_home }}/.hermes"
+    hermes_network_name: w-network
 
   tasks:
     - name: Ensure Docker is installed
@@ -28,6 +29,17 @@
         owner: "{{ hermes_user }}"
         group: "{{ hermes_user }}"
 
+    - name: Check Hermes Docker network exists
+      community.docker.docker_network_info:
+        name: "{{ hermes_network_name }}"
+      register: hermes_network_info
+
+    - name: Fail if Hermes network is missing
+      ansible.builtin.assert:
+        that:
+          - hermes_network_info.exists
+        fail_msg: "Docker network '{{ hermes_network_name }}' not found. Create it first (for example via install_docker.yml)."
+
     - name: Remove existing Hermes container if present
       ansible.builtin.command: docker rm -f hermes
       register: hermes_rm
@@ -44,6 +56,8 @@
           - hermes
           - --restart
           - unless-stopped
+          - --network
+          - "{{ hermes_network_name }}"
           - -v
           - "{{ hermes_data_dir }}:/opt/data"
           - -p

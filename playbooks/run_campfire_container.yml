@@ -1,0 +1,65 @@
+---
+- name: Run Campfire container
+  hosts: w_servers
+  become: true
+  vars_files:
+    - ../group_vars/w_servers/vault.yml
+  vars:
+    campfire_image_registry: ghcr.io
+    campfire_image_name: basecamp/once-campfire
+    campfire_image_tag: latest
+    campfire_container_name: campfire
+    campfire_restart_policy: unless-stopped
+    campfire_data_volume_name: campfire
+    campfire_data_mount_path: /rails/storage
+    campfire_network_name: w-network
+    campfire_tls_domain: ""
+    campfire_secret_key_base: ""
+    campfire_vapid_public_key: ""
+    campfire_vapid_private_key: ""
+
+  tasks:
+    - name: Validate required Campfire runtime variables
+      ansible.builtin.assert:
+        that:
+          - campfire_secret_key_base | length > 0
+          - campfire_vapid_public_key | length > 0
+          - campfire_vapid_private_key | length > 0
+          - campfire_tls_domain | length > 0
+        fail_msg: "Set campfire_* secrets and campfire_tls_domain via vault/group_vars/extra-vars before running this playbook."
+      no_log: true
+
+
+    - name: Ensure Campfire data volume exists
+      community.docker.docker_volume:
+        name: "{{ campfire_data_volume_name }}"
+        state: present
+
+    - name: Check external Campfire proxy network exists
+      community.docker.docker_network_info:
+        name: "{{ campfire_network_name }}"
+      register: campfire_network_info
+
+    - name: Fail if Campfire proxy network is missing
+      ansible.builtin.assert:
+        that:
+          - campfire_network_info.exists
+        fail_msg: "Docker network '{{ campfire_network_name }}' not found. Create it first (external network required)."
+
+    - name: Run Campfire container
+      community.docker.docker_container:
+        name: "{{ campfire_container_name }}"
+        image: "{{ campfire_image_registry }}/{{ campfire_image_name }}:{{ campfire_image_tag }}"
+        state: started
+        pull: true
+        restart_policy: "{{ campfire_restart_policy }}"
+        volumes:
+          - "{{ campfire_data_volume_name }}:{{ campfire_data_mount_path }}"
+        networks:
+          - name: "{{ campfire_network_name }}"
+        env:
+          SECRET_KEY_BASE: "{{ campfire_secret_key_base }}"
+          VAPID_PUBLIC_KEY: "{{ campfire_vapid_public_key }}"
+          VAPID_PRIVATE_KEY: "{{ campfire_vapid_private_key }}"
+          TLS_DOMAIN: "{{ campfire_tls_domain }}"
+      no_log: true

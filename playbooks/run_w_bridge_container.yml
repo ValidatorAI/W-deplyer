@@ -9,10 +9,13 @@
     w_bridge_image_name: w-bridge
     w_bridge_image_tag: ot
     w_bridge_container_name: w-bridge
+    w_bridge_data_volume_name: wbridge_data
+    w_bridge_data_mount_path: /data/w-bridge
     w_bridge_app_dir: /opt/w-bridge
     w_bridge_env_path: "{{ w_bridge_app_dir }}/.env"
     w_bridge_ports: []
     w_bridge_ports_normalized: "{{ (w_bridge_ports | from_yaml) if (w_bridge_ports is string) else w_bridge_ports }}"
+    w_bridge_network_name: w-network
     w_bridge_command: []
     secret_env_source: vault
     secret_env_url: ""
@@ -69,6 +72,22 @@
           - w_bridge_env_stat.stat.exists
         fail_msg: "No env file found. Use vault vars (w_bridge_env_content) or URL source (secret_env_source=url + secret_env_url)."
 
+    - name: Ensure w-bridge data volume exists
+      community.docker.docker_volume:
+        name: "{{ w_bridge_data_volume_name }}"
+        state: present
+
+    - name: Check w-bridge Docker network exists
+      community.docker.docker_network_info:
+        name: "{{ w_bridge_network_name }}"
+      register: w_bridge_network_info
+
+    - name: Fail if w-bridge network is missing
+      ansible.builtin.assert:
+        that:
+          - w_bridge_network_info.exists
+        fail_msg: "Docker network '{{ w_bridge_network_name }}' not found. Create it first (for example via install_docker.yml)."
+
     - name: Run w-bridge container
       community.docker.docker_container:
         name: "{{ w_bridge_container_name }}"
@@ -76,5 +95,9 @@
         state: started
         restart_policy: unless-stopped
         env_file: "{{ w_bridge_env_path }}"
+        volumes:
+          - "{{ w_bridge_data_volume_name }}:{{ w_bridge_data_mount_path }}"
+        networks:
+          - name: "{{ w_bridge_network_name }}"
         published_ports: "{{ w_bridge_ports_normalized if w_bridge_ports_normalized | length > 0 else omit }}"
         command: "{{ w_bridge_command if w_bridge_command | length > 0 else omit }}"

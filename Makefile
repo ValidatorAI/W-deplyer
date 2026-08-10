@@ -3,7 +3,7 @@ ANSIBLE_ARGS ?=
 EXTRA_VARS ?=
 PLAYBOOK_CMD = ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook $(ANSIBLE_ARGS) $(EXTRA_VARS)
 
-.PHONY: deps docker traefik hermes registry-login pull-w-bridge run-w-bridge deploy-all
+.PHONY: deps docker traefik hermes registry-login pull-w-bridge run-w-bridge run-campfire deploy-campfire deploy-all
 
 deps:
 	ansible-galaxy collection install -r requirements.yml
@@ -25,6 +25,12 @@ pull-w-bridge:
 
 run-w-bridge:
 	$(PLAYBOOK_CMD) playbooks/run_w_bridge_container.yml
+
+run-campfire:
+	$(PLAYBOOK_CMD) playbooks/run_campfire_container.yml
+
+deploy-campfire:
+	$(PLAYBOOK_CMD) playbooks/deploy_campfire.yml
 
 deploy-all:
 	$(PLAYBOOK_CMD) playbooks/site.yml
