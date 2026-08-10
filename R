@@ -1,0 +1,17 @@
+[defaults]
+# Inventory for the R environment
+inventory = ./inventory/R.ini
+remote_user = ansible
+host_key_checking = False
+retry_files_enabled = False
+timeout = 30
+interpreter_python = auto_silent
+
+[privilege_escalation]
+become = True
+become_method = sudo
+become_ask_pass = False
+
+[ssh_connection]
+pipelining = True
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s

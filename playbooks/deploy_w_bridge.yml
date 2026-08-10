@@ -1,0 +1,72 @@
+---
+- name: Pull and run w-bridge
+  hosts: w_servers
+  become: true
+  vars:
+    w_bridge_registry: registry.example.com
+    w_bridge_image_name: w-bridge
+    w_bridge_image_tag: latest
+    w_bridge_container_name: w-bridge
+    w_bridge_app_dir: /opt/w-bridge
+    w_bridge_env_path: "{{ w_bridge_app_dir }}/.env"
+    w_bridge_ports: []
+    w_bridge_extra_run_args: ""
+    secret_env_source: vault
+    secret_env_url: ""
+    secret_env_headers: {}
+    w_bridge_env_content: ""
+
+  tasks:
+    - name: Ensure app directory exists
+      ansible.builtin.file:
+        path: "{{ w_bridge_app_dir }}"
+        state: directory
+        mode: "0750"
+
+    - name: Write .env from vaulted variable
+      ansible.builtin.copy:
+        dest: "{{ w_bridge_env_path }}"
+        content: "{{ w_bridge_env_content }}"
+        mode: "0600"
+      when:
+        - secret_env_source == 'vault'
+        - w_bridge_env_content | length > 0
+      no_log: true
+
+    - name: Download .env from remote secret URL
+      ansible.builtin.get_url:
+        url: "{{ secret_env_url }}"
+        dest: "{{ w_bridge_env_path }}"
+        mode: "0600"
+        headers: "{{ secret_env_headers }}"
+        force: true
+      when:
+        - secret_env_source == 'url'
+        - secret_env_url | length > 0
+      no_log: true
+
+    - name: Validate .env file exists
+      ansible.builtin.stat:
+        path: "{{ w_bridge_env_path }}"
+      register: w_bridge_env_stat
+
+    - name: Fail if .env file is missing
+      ansible.builtin.assert:
+        that:
+          - w_bridge_env_stat.stat.exists
+        fail_msg: "No env file found. Use vault vars (w_bridge_env_content) or URL source (secret_env_source=url + secret_env_url)."
+
+    - name: Pull w-bridge image
+      community.docker.docker_image:
+        name: "{{ w_bridge_registry }}/{{ w_bridge_image_name }}:{{ w_bridge_image_tag }}"
+        source: pull
+
+    - name: Create w-bridge container
+      community.docker.docker_container:
+        name: "{{ w_bridge_container_name }}"
+        image: "{{ w_bridge_registry }}/{{ w_bridge_image_name }}:{{ w_bridge_image_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        env_file: "{{ w_bridge_env_path }}"
+        published_ports: "{{ w_bridge_ports if w_bridge_ports | length > 0 else omit }}"
+        command: "{{ w_bridge_extra_run_args if w_bridge_extra_run_args | length > 0 else omit }}"

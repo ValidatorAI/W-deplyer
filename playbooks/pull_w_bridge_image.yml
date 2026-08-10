@@ -1,0 +1,14 @@
+---
+- name: Pull w-bridge image from registry
+  hosts: w_servers
+  become: true
+  vars:
+    w_bridge_registry: registry.example.com
+    w_bridge_image_name: w-bridge
+    w_bridge_image_tag: latest
+
+  tasks:
+    - name: Pull w-bridge image
+      community.docker.docker_image:
+        name: "{{ w_bridge_registry }}/{{ w_bridge_image_name }}:{{ w_bridge_image_tag }}"
+        source: pull

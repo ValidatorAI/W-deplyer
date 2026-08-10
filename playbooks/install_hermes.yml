@@ -1,0 +1,42 @@
+---
+- name: Install Hermes
+  hosts: w_servers
+  become: true
+  vars:
+    hermes_install_method: binary
+    hermes_binary_url: ""
+    hermes_binary_path: /usr/local/bin/hermes
+
+  tasks:
+    - name: Ensure curl is installed for binary downloads
+      ansible.builtin.apt:
+        name: curl
+        state: present
+        update_cache: true
+      when: hermes_install_method == 'binary'
+
+    - name: Validate Hermes binary URL is set when using binary method
+      ansible.builtin.assert:
+        that:
+          - hermes_binary_url | length > 0
+        fail_msg: "Set hermes_binary_url (for example with -e hermes_binary_url=https://example/hermes-linux-amd64)."
+      when: hermes_install_method == 'binary'
+
+    - name: Download Hermes binary
+      ansible.builtin.get_url:
+        url: "{{ hermes_binary_url }}"
+        dest: "{{ hermes_binary_path }}"
+        mode: "0755"
+        force: true
+      when: hermes_install_method == 'binary'
+
+    - name: Show Hermes version if installed
+      ansible.builtin.command: "{{ hermes_binary_path }} --version"
+      register: hermes_version
+      changed_when: false
+      failed_when: false
+
+    - name: Display Hermes version output
+      ansible.builtin.debug:
+        var: hermes_version.stdout
+      when: hermes_version.stdout | length > 0

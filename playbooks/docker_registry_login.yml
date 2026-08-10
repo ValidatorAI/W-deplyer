@@ -1,0 +1,23 @@
+---
+- name: Log in to custom Docker registry
+  hosts: w_servers
+  become: true
+  vars:
+    docker_registry_url: registry.example.com
+    docker_registry_username: ""
+    docker_registry_password: ""
+
+  tasks:
+    - name: Validate registry credentials are provided
+      ansible.builtin.assert:
+        that:
+          - docker_registry_username | length > 0
+          - docker_registry_password | length > 0
+        fail_msg: "Provide docker_registry_username and docker_registry_password (preferably via Ansible Vault)."
+
+    - name: Log in to Docker registry
+      community.docker.docker_login:
+        registry_url: "{{ docker_registry_url }}"
+        username: "{{ docker_registry_username }}"
+        password: "{{ docker_registry_password }}"
+      no_log: true

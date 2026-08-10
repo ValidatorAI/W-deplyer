@@ -1,0 +1,56 @@
+---
+- name: Install Traefik
+  hosts: w_servers
+  become: true
+  vars:
+    traefik_dir: /opt/traefik
+    traefik_timezone: UTC
+    traefik_http_port: 80
+    traefik_https_port: 443
+    traefik_dashboard_port: 8080
+
+  tasks:
+    - name: Ensure Traefik directory exists
+      ansible.builtin.file:
+        path: "{{ traefik_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Ensure ACME storage file exists
+      ansible.builtin.file:
+        path: "{{ traefik_dir }}/acme.json"
+        state: touch
+        mode: "0600"
+
+    - name: Create docker-compose file for Traefik
+      ansible.builtin.copy:
+        dest: "{{ traefik_dir }}/docker-compose.yml"
+        mode: "0644"
+        content: |
+          services:
+            traefik:
+              image: traefik:v3.1
+              container_name: traefik
+              restart: unless-stopped
+              ports:
+                - "{{ traefik_http_port }}:80"
+                - "{{ traefik_https_port }}:443"
+                - "{{ traefik_dashboard_port }}:8080"
+              environment:
+                TZ: "{{ traefik_timezone }}"
+              command:
+                - --api.dashboard=true
+                - --providers.docker=true
+                - --providers.docker.exposedbydefault=false
+                - --entrypoints.web.address=:80
+                - --entrypoints.websecure.address=:443
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock:ro
+                - ./acme.json:/acme.json
+
+    - name: Start Traefik
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ traefik_dir }}"
+      register: traefik_up
+      changed_when: "'Started' in traefik_up.stdout or 'Recreated' in traefik_up.stdout or 'Creating' in traefik_up.stdout"

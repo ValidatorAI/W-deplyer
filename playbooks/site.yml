@@ -1,0 +1,7 @@
+---
+- import_playbook: install_docker.yml
+- import_playbook: install_traefik.yml
+- import_playbook: install_hermes.yml
+- import_playbook: docker_registry_login.yml
+- import_playbook: pull_w_bridge_image.yml
+- import_playbook: run_w_bridge_container.yml
