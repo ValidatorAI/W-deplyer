@@ -43,6 +43,34 @@ make pull-w-bridge
 make run-w-bridge
 ```
 
+## Password Prompts (Vault / Sudo)
+
+Use Makefile passthrough args when Ansible needs a password prompt.
+
+Prompt for Ansible Vault password:
+
+```bash
+make deploy-all ANSIBLE_ARGS='--ask-vault-pass'
+```
+
+Prompt for sudo/become password:
+
+```bash
+make deploy-all ANSIBLE_ARGS='--ask-become-pass'
+```
+
+Prompt for both:
+
+```bash
+make deploy-all ANSIBLE_ARGS='--ask-vault-pass --ask-become-pass'
+```
+
+You can combine these with variables, for example:
+
+```bash
+make hermes ANSIBLE_ARGS='--ask-vault-pass' EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY'
+```
+
 ## Runtime Variables
 
 Common variables you should override:
@@ -68,26 +96,29 @@ There are two supported ways to provide the container `.env` file in `playbooks/
 
 ### Option A: Ansible Vault (recommended)
 
-1. Create an encrypted vars file:
+1. Fill project secret files:
 
 ```bash
-ansible-vault create group_vars/w_servers/vault.yml
+vi .ansible/vault-pass.txt
+vi group_vars/w_servers/vault.yml
 ```
 
-2. Add secrets inside:
-
-```yaml
-docker_registry_username: your-user
-docker_registry_password: your-pass
-w_bridge_env_content: |
-	APP_ENV=production
-	APP_KEY=super-secret-value
-```
-
-3. Run playbook with vault password:
+2. Encrypt vars file:
 
 ```bash
-ANSIBLE_CONFIG=./W.cfg ansible-playbook playbooks/site.yml --ask-vault-pass
+ansible-vault encrypt group_vars/w_servers/vault.yml
+```
+
+3. If you need to edit secrets later:
+
+```bash
+ansible-vault edit group_vars/w_servers/vault.yml
+```
+
+4. Run playbook (password is read from .ansible/vault-pass.txt via W.cfg):
+
+```bash
+make deploy-all
 ```
 
 ### Option B: Download from secret URL
@@ -104,9 +135,14 @@ If your endpoint needs headers/tokens, pass `secret_env_headers` from vaulted va
 
 ## Notes
 
-- `playbooks/install_hermes.yml` expects `hermes_binary_url` when `hermes_install_method=binary`.
+- `playbooks/install_hermes.yml` deploys Hermes as a Docker container (`nousresearch/hermes-agent gateway run`) with `~/.hermes` mounted to `/opt/data`.
+- Provide only `hermes_api_server_key` via vars/inventory/extra-vars; other API server flags are set by the playbook.
 - For local Docker test target:
 
 ```bash
 docker run -d --name my-ubuntu dokken/ubuntu-26.04 sleep infinity
+```
+
+‍‍‍```bash
+make hermes EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY -e deepseek_api_key=sk-'
 ```

@@ -1,0 +1,2 @@
+.ansible/
+group_vars/w_servers/vault.yml

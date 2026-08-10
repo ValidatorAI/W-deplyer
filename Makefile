@@ -1,5 +1,7 @@
 ANSIBLE_CONFIG ?= ./W.cfg
-PLAYBOOK_CMD = ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook
+ANSIBLE_ARGS ?=
+EXTRA_VARS ?=
+PLAYBOOK_CMD = ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook $(ANSIBLE_ARGS) $(EXTRA_VARS)
 
 .PHONY: deps docker traefik hermes registry-login pull-w-bridge run-w-bridge deploy-all
 
