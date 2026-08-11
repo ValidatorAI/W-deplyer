@@ -150,3 +150,7 @@ docker run -d --name my-ubuntu dokken/ubuntu-26.04 sleep infinity
 ‍‍‍```bash
 make hermes EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY -e deepseek_api_key=sk-'
 ```
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
