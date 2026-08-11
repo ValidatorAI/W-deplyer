@@ -5,7 +5,7 @@
   vars_files:
     - ../group_vars/w_servers/vault.yml
   vars:
-    w_bridge_registry: registry2.siavashmohammady.ir
+    w_bridge_registry: ...
     w_bridge_image_name: w-bridge
     w_bridge_image_tag: ot
     w_bridge_container_name: w-bridge

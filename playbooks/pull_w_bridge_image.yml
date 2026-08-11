@@ -3,7 +3,7 @@
   hosts: w_servers
   become: true
   vars:
-    w_bridge_registry: registry2.siavashmohammady.ir
+    w_bridge_registry: ...
     w_bridge_image_name: w-bridge
     w_bridge_image_tag: ot
 
