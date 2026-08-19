@@ -7,6 +7,9 @@
     hermes_home: "{{ ansible_env.HOME | default('/root') }}"
     hermes_data_dir: "{{ hermes_home }}/.hermes"
     hermes_network_name: w-network
+    hermes_openviking_enabled: true
+    hermes_openviking_base_url: "http://openviking:8080"
+    hermes_openviking_api_key: ""
 
   tasks:
     - name: Ensure Docker is installed
@@ -70,6 +73,12 @@
           - "API_SERVER_KEY={{ hermes_api_server_key }}"
           - -e
           - API_SERVER_CORS_ORIGINS=*
+          - -e
+          - "OPENVIKING_ENABLED={{ hermes_openviking_enabled | ternary('true', 'false') }}"
+          - -e
+          - "OPENVIKING_BASE_URL={{ hermes_openviking_base_url }}"
+          - -e
+          - "OPENVIKING_API_KEY={{ hermes_openviking_api_key }}"
           - nousresearch/hermes-agent
           - gateway
           - run

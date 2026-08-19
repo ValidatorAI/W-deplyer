@@ -140,7 +140,11 @@ If your endpoint needs headers/tokens, pass `secret_env_headers` from vaulted va
 ## Notes
 
 - `playbooks/install_hermes.yml` deploys Hermes as a Docker container (`nousresearch/hermes-agent gateway run`) with `~/.hermes` mounted to `/opt/data`.
-- Provide only `hermes_api_server_key` via vars/inventory/extra-vars; other API server flags are set by the playbook.
+- Configure Hermes API and OpenViking memory integration via vars/inventory/extra-vars:
+	- `hermes_api_server_key`
+	- `hermes_openviking_enabled` (default: `true`)
+	- `hermes_openviking_base_url` (default: `http://openviking:8080`)
+	- `hermes_openviking_api_key` (optional)
 - For local Docker test target:
 
 ```bash
@@ -149,6 +153,12 @@ docker run -d --name my-ubuntu dokken/ubuntu-26.04 sleep infinity
 
 ‍‍‍```bash
 make hermes EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY -e deepseek_api_key=sk-'
+```
+
+Hermes example with OpenViking enabled:
+
+```bash
+make hermes EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY -e hermes_openviking_enabled=true -e hermes_openviking_base_url=http://openviking:8080'
 ```
 
 ## OpenViking as System Memory
@@ -168,6 +178,35 @@ openviking-server init      # interactive wizard: providers, models, ov.conf
 openviking-server doctor    # validate setup
 openviking-server           # start (background: nohup openviking-server > openviking.log 2>&1 &)
 ```
+
+### Installation Storyboard
+
+1. Prepare a Python environment dedicated to OpenViking.
+2. Install/upgrade the package.
+3. Run the initialization wizard and set providers/models.
+4. Validate with `doctor`.
+5. Start OpenViking and verify logs/health.
+6. Point Hermes to OpenViking using `hermes_openviking_*` vars.
+7. Deploy Hermes and verify memory-backed workflows.
+
+```mermaid
+flowchart TD
+	A[Create venv for OpenViking] --> B[pip install openviking --upgrade]
+	B --> C[openviking-server init]
+	C --> D[openviking-server doctor]
+	D --> E[Start openviking-server]
+	E --> F[Set hermes_openviking_base_url]
+	F --> G[Run make hermes]
+	G --> H[Validate end-to-end memory behavior]
+```
+
+### Should OpenViking use the same Python environment as Hermes?
+
+Short answer: no, not in this setup.
+
+- Hermes here runs as a Docker container, so it does not share your host Python environment.
+- OpenViking should run in its own host-side Python virtual environment (or its own container) for cleaner dependency isolation and easier upgrades/rollback.
+- Use the same environment only if you intentionally co-locate multiple Python services and accept tighter dependency coupling.
 
 ## License
 
