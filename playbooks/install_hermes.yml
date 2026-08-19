@@ -113,6 +113,53 @@
       register: hermes_openviking_target_uri_set
       changed_when: true
 
+    - name: Append Bonfire collaboration rules to Hermes default profile
+      ansible.builtin.shell: |
+        set -euo pipefail
+
+        rules=$(cat <<'EOF'
+        ## Bonfire Collaboration Rules
+
+        ### Response routing
+        - If a message is sent from a specific room, send the response to that same room, and use the same sender bot that received the message.
+
+        ### Formatting
+        - Do not use markup (Markdown) in responses. Use HTML tags instead: <ul>, <li>, <a>, <b>, <pre>.
+        - Always wrap code in <pre> tags.
+
+        ### Kanban
+        - Use one kanban board per room. If the room has no board yet, create one. The board is the collaboration surface for the room.
+        - When the user approves a task or sets a task as valid, add that task to the shared kanban of the room.
+
+        ### Memory scoping
+        - Shared memory is scoped per room: profiles working in the same room share memory with each other; never share memory between two different rooms.
+        - A tasks room shares the memory of its parent project room.
+        - Two tasks rooms never share memory with each other, even when they belong to the same parent project.
+        EOF
+        )
+
+        current="$(docker exec hermes hermes config get profiles.default.systemPrompt 2>/dev/null || true)"
+
+        if [[ "$current" == *"## Bonfire Collaboration Rules"* ]]; then
+          echo "UNCHANGED"
+          exit 0
+        fi
+
+        if [[ -n "$current" ]]; then
+          updated="${current}"
+          updated+=$'\n\n'
+          updated+="${rules}"
+        else
+          updated="${rules}"
+        fi
+
+        docker exec hermes hermes config set profiles.default.systemPrompt "$updated" >/dev/null
+        echo "CHANGED"
+      args:
+        executable: /bin/bash
+      register: hermes_default_profile_rules_append
+      changed_when: "'CHANGED' in hermes_default_profile_rules_append.stdout"
+
     - name: Show Hermes container id
       ansible.builtin.debug:
         var: hermes_container_run.stdout
