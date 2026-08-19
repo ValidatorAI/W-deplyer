@@ -8,6 +8,23 @@
     openviking_dir: "{{ openviking_home }}/.openviking"
     openviking_venv_dir: "{{ openviking_dir }}/venv"
     openviking_pip_package: "openviking"
+    openviking_embedding_provider: "volcengine"
+    openviking_embedding_api_key: ""
+    openviking_embedding_api_base: "https://ark.cn-beijing.volces.com/api/v3"
+    openviking_embedding_model: "doubao-embedding-vision-251215"
+    openviking_embedding_dimension: 1024
+    openviking_embedding_input: "multimodal"
+    openviking_vlm_provider: "volcengine"
+    openviking_vlm_api_key: ""
+    openviking_vlm_api_base: "https://ark.cn-beijing.volces.com/api/v3"
+    openviking_vlm_model: "doubao-seed-2-0-lite-260428"
+    openviking_storage_workspace: "./data"
+    openviking_server_host: "127.0.0.1"
+    openviking_server_port: 1933
+    openviking_server_auth_mode: "api_key"
+    openviking_server_root_api_key: ""
+    openviking_server_cors_origins:
+      - "*"
 
   tasks:
     - name: Ensure python3 is installed
@@ -37,14 +54,44 @@
         state: present
         virtualenv: "{{ openviking_venv_dir }}"
 
-    - name: Check whether OpenViking config exists
-      ansible.builtin.stat:
-        path: "{{ openviking_dir }}/ov.conf"
-      register: openviking_conf
+    - name: Validate required OpenViking embedding settings
+      ansible.builtin.assert:
+        that:
+          - openviking_embedding_provider | length > 0
+          - openviking_embedding_api_key | length > 0
+          - openviking_embedding_model | length > 0
+          - openviking_embedding_dimension | int > 0
+        fail_msg: >-
+          Set OpenViking embedding settings via vars (provider/api_key/model/dimension).
 
-    - name: Remind to initialize OpenViking config
+    - name: Validate required OpenViking VLM settings
+      ansible.builtin.assert:
+        that:
+          - openviking_vlm_provider | length > 0
+          - openviking_vlm_model | length > 0
+          - openviking_vlm_provider == 'openai-codex' or (openviking_vlm_api_key | length > 0)
+        fail_msg: >-
+          Set OpenViking VLM settings via vars. For non-openai-codex providers,
+          openviking_vlm_api_key is required.
+
+    - name: Render OpenViking server config non-interactively
+      ansible.builtin.template:
+        src: templates/openviking.ov.conf.j2
+        dest: "{{ openviking_dir }}/ov.conf"
+        mode: "0600"
+        owner: "{{ openviking_user }}"
+        group: "{{ openviking_user }}"
+
+    - name: Validate OpenViking config and provider connectivity
+      ansible.builtin.command: "{{ openviking_venv_dir }}/bin/openviking-server doctor"
+      environment:
+        OPENVIKING_CONFIG_FILE: "{{ openviking_dir }}/ov.conf"
+      register: openviking_doctor
+      changed_when: false
+      no_log: true
+
+    - name: Confirm non-interactive OpenViking initialization
       ansible.builtin.debug:
         msg: >-
-          OpenViking is installed. Run '{{ openviking_venv_dir }}/bin/openviking-server init'
-          once to complete interactive configuration.
-      when: not openviking_conf.stat.exists
+          OpenViking ov.conf was rendered from Ansible vars and validated via
+          doctor (no interactive init used).

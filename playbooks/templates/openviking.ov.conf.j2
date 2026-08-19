@@ -1,0 +1,34 @@
+{
+  "storage": {
+    "workspace": {{ openviking_storage_workspace | to_json }},
+    "agfs": {
+      "backend": "local"
+    },
+    "vectordb": {
+      "backend": "local"
+    }
+  },
+  "embedding": {
+    "dense": {
+      "provider": {{ openviking_embedding_provider | to_json }},
+      "api_key": {{ openviking_embedding_api_key | to_json }},
+      "model": {{ openviking_embedding_model | to_json }},
+      "dimension": {{ openviking_embedding_dimension | int }},
+      "input": {{ openviking_embedding_input | to_json }}{% if openviking_embedding_api_base | length > 0 %},
+      "api_base": {{ openviking_embedding_api_base | to_json }}{% endif %}
+    }
+  },
+  "vlm": {
+    "provider": {{ openviking_vlm_provider | to_json }},
+    "model": {{ openviking_vlm_model | to_json }},
+    "api_key": {{ openviking_vlm_api_key | to_json }}{% if openviking_vlm_api_base | length > 0 %},
+    "api_base": {{ openviking_vlm_api_base | to_json }}{% endif %}
+  },
+  "server": {
+    "host": {{ openviking_server_host | to_json }},
+    "port": {{ openviking_server_port | int }},
+    "auth_mode": {{ openviking_server_auth_mode | to_json }},
+    "cors_origins": {{ openviking_server_cors_origins | to_json }}{% if openviking_server_root_api_key | length > 0 %},
+    "root_api_key": {{ openviking_server_root_api_key | to_json }}{% endif %}
+  }
+}

@@ -170,14 +170,28 @@ OpenViking can act as the memory layer of the system by storing and serving pers
 
 - Persistent memory across restarts, so context is not lost between runs.
 - Centralized memory access for multiple components.
-- Provider/model configuration through an initialization wizard.
+- Provider/model configuration through `ov.conf` generated from Ansible vars.
 - Built-in health checks (`doctor`) to validate configuration before production use.
+
+OpenViking non-interactive configuration vars (set in vault/inventory/extra-vars):
+
+- `openviking_embedding_provider`
+- `openviking_embedding_api_key`
+- `openviking_embedding_api_base`
+- `openviking_embedding_model`
+- `openviking_embedding_dimension`
+- `openviking_embedding_input` (set `multimodal` for vision embedding)
+- `openviking_vlm_provider`
+- `openviking_vlm_api_key`
+- `openviking_vlm_api_base`
+- `openviking_vlm_model`
+- `openviking_server_root_api_key` (optional, but required when exposing server on non-localhost)
 
 Setup and run:
 
 ```bash
 pip install openviking --upgrade
-openviking-server init      # interactive wizard: providers, models, ov.conf
+make openviking             # renders ~/.openviking/ov.conf from vars (non-interactive)
 openviking-server doctor    # validate setup
 openviking-server           # start (background: nohup openviking-server > openviking.log 2>&1 &)
 ```
@@ -186,7 +200,7 @@ openviking-server           # start (background: nohup openviking-server > openv
 
 1. Prepare a Python environment dedicated to OpenViking.
 2. Install/upgrade the package.
-3. Run the initialization wizard and set providers/models.
+3. Render `ov.conf` from vars (provider, API key, vision embedding, VLM).
 4. Validate with `doctor`.
 5. Start OpenViking and verify logs/health.
 6. Point Hermes to OpenViking using `hermes_openviking_*` vars.
@@ -197,7 +211,7 @@ Automation note: `make deploy-all` now installs OpenViking before Hermes (`insta
 ```mermaid
 flowchart TD
 	A[Create venv for OpenViking] --> B[pip install openviking --upgrade]
-	B --> C[openviking-server init]
+	B --> C[Render ov.conf from Ansible vars]
 	C --> D[openviking-server doctor]
 	D --> E[Start openviking-server]
 	E --> F[Set hermes_openviking_base_url]

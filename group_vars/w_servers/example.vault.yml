@@ -7,6 +7,20 @@ hermes_openviking_enabled: true
 hermes_openviking_base_url: "http://openviking:8080"
 hermes_openviking_api_key: ""
 
+# Required by playbooks/install_openviking.yml
+openviking_embedding_provider: "volcengine"
+openviking_embedding_api_key: ""
+openviking_embedding_api_base: "https://ark.cn-beijing.volces.com/api/v3"
+openviking_embedding_model: "doubao-embedding-vision-251215"
+openviking_embedding_dimension: 1024
+openviking_embedding_input: "multimodal"
+openviking_vlm_provider: "volcengine"
+openviking_vlm_api_key: ""
+openviking_vlm_api_base: "https://ark.cn-beijing.volces.com/api/v3"
+openviking_vlm_model: "doubao-seed-2-0-lite-260428"
+# Optional server auth key used by Hermes as OPENVIKING_API_KEY when auth is enabled.
+openviking_server_root_api_key: ""
+
 # Required by playbooks/docker_registry_login.yml
 docker_registry_url: ""
 docker_registry_username: ""
