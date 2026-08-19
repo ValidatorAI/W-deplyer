@@ -3,7 +3,7 @@ ANSIBLE_ARGS ?=
 EXTRA_VARS ?=
 PLAYBOOK_CMD = ANSIBLE_CONFIG=$(ANSIBLE_CONFIG) ansible-playbook $(ANSIBLE_ARGS) $(EXTRA_VARS)
 
-.PHONY: deps docker traefik hermes registry-login pull-w-bridge run-w-bridge run-campfire deploy-campfire deploy-all
+.PHONY: deps docker traefik openviking hermes registry-login pull-w-bridge run-w-bridge run-campfire deploy-campfire deploy-all
 
 deps:
 	ansible-galaxy collection install -r requirements.yml
@@ -13,6 +13,9 @@ docker:
 
 traefik:
 	$(PLAYBOOK_CMD) playbooks/install_traefik.yml
+
+openviking:
+	$(PLAYBOOK_CMD) playbooks/install_openviking.yml
 
 hermes:
 	$(PLAYBOOK_CMD) playbooks/install_hermes.yml

@@ -1,0 +1,50 @@
+---
+- name: Install OpenViking
+  hosts: w_servers
+  become: true
+  vars:
+    openviking_user: "{{ ansible_user | default('root') }}"
+    openviking_home: "{{ ansible_env.HOME | default('/root') }}"
+    openviking_dir: "{{ openviking_home }}/.openviking"
+    openviking_venv_dir: "{{ openviking_dir }}/venv"
+    openviking_pip_package: "openviking"
+
+  tasks:
+    - name: Ensure python3 is installed
+      ansible.builtin.command: python3 --version
+      changed_when: false
+
+    - name: Ensure python3 venv module is available
+      ansible.builtin.command: python3 -m venv --help
+      changed_when: false
+
+    - name: Ensure OpenViking base directory exists
+      ansible.builtin.file:
+        path: "{{ openviking_dir }}"
+        state: directory
+        mode: "0750"
+        owner: "{{ openviking_user }}"
+        group: "{{ openviking_user }}"
+
+    - name: Ensure OpenViking virtual environment exists
+      ansible.builtin.command: python3 -m venv "{{ openviking_venv_dir }}"
+      args:
+        creates: "{{ openviking_venv_dir }}/bin/activate"
+
+    - name: Install OpenViking package
+      ansible.builtin.pip:
+        name: "{{ openviking_pip_package }}"
+        state: present
+        virtualenv: "{{ openviking_venv_dir }}"
+
+    - name: Check whether OpenViking config exists
+      ansible.builtin.stat:
+        path: "{{ openviking_dir }}/ov.conf"
+      register: openviking_conf
+
+    - name: Remind to initialize OpenViking config
+      ansible.builtin.debug:
+        msg: >-
+          OpenViking is installed. Run '{{ openviking_venv_dir }}/bin/openviking-server init'
+          once to complete interactive configuration.
+      when: not openviking_conf.stat.exists

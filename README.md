@@ -8,10 +8,11 @@ The repository now has dedicated playbooks for each step:
 
 1. Install Docker: `playbooks/install_docker.yml`
 2. Install Traefik (Docker Compose): `playbooks/install_traefik.yml`
-3. Install Hermes: `playbooks/install_hermes.yml`
-4. Log in to custom Docker registry: `playbooks/docker_registry_login.yml`
-5. Pull `w-bridge:latest`: `playbooks/pull_w_bridge_image.yml`
-6. Run `w-bridge` container: `playbooks/run_w_bridge_container.yml`
+3. Install OpenViking: `playbooks/install_openviking.yml`
+4. Install Hermes: `playbooks/install_hermes.yml`
+5. Log in to custom Docker registry: `playbooks/docker_registry_login.yml`
+6. Pull `w-bridge:latest`: `playbooks/pull_w_bridge_image.yml`
+7. Run `w-bridge` container: `playbooks/run_w_bridge_container.yml`
 
 Also included:
 - Full orchestrator: `playbooks/site.yml`
@@ -37,6 +38,7 @@ Or run one step at a time:
 ```bash
 make docker
 make traefik
+make openviking
 make hermes
 make registry-login
 make pull-w-bridge
@@ -188,6 +190,8 @@ openviking-server           # start (background: nohup openviking-server > openv
 5. Start OpenViking and verify logs/health.
 6. Point Hermes to OpenViking using `hermes_openviking_*` vars.
 7. Deploy Hermes and verify memory-backed workflows.
+
+Automation note: `make deploy-all` now installs OpenViking before Hermes (`install_openviking.yml` runs before `install_hermes.yml`).
 
 ```mermaid
 flowchart TD
