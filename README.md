@@ -193,7 +193,8 @@ Setup and run:
 pip install openviking --upgrade
 make openviking             # renders ~/.openviking/ov.conf from vars (non-interactive)
 openviking-server doctor    # validate setup
-openviking-server           # start (background: nohup openviking-server > openviking.log 2>&1 &)
+sudo systemctl enable --now openviking
+sudo systemctl status openviking
 ```
 
 ### Installation Storyboard
@@ -202,7 +203,7 @@ openviking-server           # start (background: nohup openviking-server > openv
 2. Install/upgrade the package.
 3. Render `ov.conf` from vars (provider, API key, vision embedding, VLM).
 4. Validate with `doctor`.
-5. Start OpenViking and verify logs/health.
+5. Install OpenViking systemd unit, then enable and start the service.
 6. Point Hermes to OpenViking using `hermes_openviking_*` vars.
 7. Deploy Hermes (Kanban dashboard plugin is enabled by default) and verify memory-backed workflows.
 
@@ -213,7 +214,7 @@ flowchart TD
 	A[Create venv for OpenViking] --> B[pip install openviking --upgrade]
 	B --> C[Render ov.conf from Ansible vars]
 	C --> D[openviking-server doctor]
-	D --> E[Start openviking-server]
+	D --> E[Install and start openviking.service]
 	E --> F[Set hermes_openviking_base_url]
 	F --> G[Run make hermes]
 	G --> H[Validate end-to-end memory behavior]

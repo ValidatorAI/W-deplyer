@@ -23,6 +23,7 @@
     openviking_server_port: 1933
     openviking_server_auth_mode: "api_key"
     openviking_server_root_api_key: ""
+    openviking_service_name: "openviking"
     openviking_server_cors_origins:
       - "*"
 
@@ -96,8 +97,29 @@
       changed_when: false
       no_log: true
 
+    - name: Install OpenViking systemd service unit
+      ansible.builtin.template:
+        src: templates/openviking.service.j2
+        dest: "/etc/systemd/system/{{ openviking_service_name }}.service"
+        mode: "0644"
+      notify: Restart OpenViking service
+
+    - name: Ensure OpenViking service is enabled and started
+      ansible.builtin.systemd:
+        name: "{{ openviking_service_name }}"
+        daemon_reload: true
+        enabled: true
+        state: started
+
     - name: Confirm non-interactive OpenViking initialization
       ansible.builtin.debug:
         msg: >-
-          OpenViking ov.conf was rendered from Ansible vars and validated via
-          doctor (no interactive init used).
+          OpenViking ov.conf was rendered from Ansible vars, validated via
+          doctor, and configured as a systemd service.
+
+  handlers:
+    - name: Restart OpenViking service
+      ansible.builtin.systemd:
+        name: "{{ openviking_service_name }}"
+        daemon_reload: true
+        state: restarted

@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenViking Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ openviking_user }}
+Group={{ openviking_user }}
+WorkingDirectory={{ openviking_dir }}
+Environment=OPENVIKING_CONFIG_FILE={{ openviking_dir }}/ov.conf
+ExecStart={{ openviking_venv_dir }}/bin/openviking-server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
