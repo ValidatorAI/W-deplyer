@@ -99,6 +99,20 @@
       register: hermes_kanban_plugin_enable
       changed_when: "'already enabled' not in (hermes_kanban_plugin_enable.stdout | lower)"
 
+    - name: Set Hermes OpenViking target URI template
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - hermes
+          - hermes
+          - config
+          - set
+          - memory.openviking.targetUri
+          - viking://{user}
+      register: hermes_openviking_target_uri_set
+      changed_when: true
+
     - name: Show Hermes container id
       ansible.builtin.debug:
         var: hermes_container_run.stdout
