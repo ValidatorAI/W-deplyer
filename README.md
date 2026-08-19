@@ -142,6 +142,7 @@ If your endpoint needs headers/tokens, pass `secret_env_headers` from vaulted va
 ## Notes
 
 - `playbooks/install_hermes.yml` deploys Hermes as a Docker container (`nousresearch/hermes-agent gateway run`) with `~/.hermes` mounted to `/opt/data`.
+- The Hermes install playbook enables the bundled Kanban dashboard plugin (`kanban/dashboard`) by default.
 - Configure Hermes API and OpenViking memory integration via vars/inventory/extra-vars:
 	- `hermes_api_server_key`
 	- `hermes_openviking_enabled` (default: `true`)
@@ -189,7 +190,7 @@ openviking-server           # start (background: nohup openviking-server > openv
 4. Validate with `doctor`.
 5. Start OpenViking and verify logs/health.
 6. Point Hermes to OpenViking using `hermes_openviking_*` vars.
-7. Deploy Hermes and verify memory-backed workflows.
+7. Deploy Hermes (Kanban dashboard plugin is enabled by default) and verify memory-backed workflows.
 
 Automation note: `make deploy-all` now installs OpenViking before Hermes (`install_openviking.yml` runs before `install_hermes.yml`).
 

@@ -86,6 +86,19 @@
       changed_when: true
       no_log: true
 
+    - name: Enable Hermes Kanban dashboard plugin by default
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - hermes
+          - hermes
+          - plugins
+          - enable
+          - kanban/dashboard
+      register: hermes_kanban_plugin_enable
+      changed_when: "'already enabled' not in (hermes_kanban_plugin_enable.stdout | lower)"
+
     - name: Show Hermes container id
       ansible.builtin.debug:
         var: hermes_container_run.stdout
