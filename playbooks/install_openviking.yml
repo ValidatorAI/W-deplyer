@@ -19,10 +19,10 @@
     openviking_vlm_api_base: "https://ark.cn-beijing.volces.com/api/v3"
     openviking_vlm_model: "doubao-seed-2-0-lite-260428"
     openviking_storage_workspace: "./data"
-    openviking_server_host: "127.0.0.1"
+    openviking_server_host: "0.0.0.0"
     openviking_server_port: 1933
     openviking_server_auth_mode: "api_key"
-    openviking_server_root_api_key: ""
+    openviking_server_root_api_key: "{{ lookup('ansible.builtin.env', 'OPENVIKING_SERVER_ROOT_API_KEY') | default('', true) }}"
     openviking_service_name: "openviking"
     openviking_server_cors_origins:
       - "*"
@@ -80,6 +80,14 @@
         fail_msg: >-
           Set OpenViking VLM settings via vars. For non-openai-codex providers,
           openviking_vlm_api_key is required.
+
+    - name: Validate OpenViking server API key is provided via environment
+      ansible.builtin.assert:
+        that:
+          - openviking_server_root_api_key | length > 0
+        fail_msg: >-
+          Set OPENVIKING_SERVER_ROOT_API_KEY in the Ansible controller environment
+          (or override openviking_server_root_api_key via vars).
 
     - name: Render OpenViking server config non-interactively
       ansible.builtin.template:

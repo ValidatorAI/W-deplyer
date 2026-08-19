@@ -18,7 +18,8 @@ openviking_vlm_provider: "volcengine"
 openviking_vlm_api_key: ""
 openviking_vlm_api_base: "https://ark.cn-beijing.volces.com/api/v3"
 openviking_vlm_model: "doubao-seed-2-0-lite-260428"
-# Optional server auth key used by Hermes as OPENVIKING_API_KEY when auth is enabled.
+# Prefer setting OPENVIKING_SERVER_ROOT_API_KEY in the Ansible controller
+# environment. This var remains available as an explicit override if needed.
 openviking_server_root_api_key: ""
 
 # Required by playbooks/docker_registry_login.yml

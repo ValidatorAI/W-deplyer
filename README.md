@@ -185,12 +185,16 @@ OpenViking non-interactive configuration vars (set in vault/inventory/extra-vars
 - `openviking_vlm_api_key`
 - `openviking_vlm_api_base`
 - `openviking_vlm_model`
-- `openviking_server_root_api_key` (optional, but required when exposing server on non-localhost)
+- `OPENVIKING_SERVER_ROOT_API_KEY` in your Ansible controller environment
+	(used by playbook as `openviking_server_root_api_key`)
+
+Default server binding is `0.0.0.0` and auth mode is `api_key`.
 
 Setup and run:
 
 ```bash
 pip install openviking --upgrade
+export OPENVIKING_SERVER_ROOT_API_KEY=YOUR_STRONG_KEY
 make openviking             # renders ~/.openviking/ov.conf from vars (non-interactive)
 openviking-server doctor    # validate setup
 sudo systemctl enable --now openviking

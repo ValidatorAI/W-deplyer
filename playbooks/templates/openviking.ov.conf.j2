@@ -28,7 +28,7 @@
     "host": {{ openviking_server_host | to_json }},
     "port": {{ openviking_server_port | int }},
     "auth_mode": {{ openviking_server_auth_mode | to_json }},
-    "cors_origins": {{ openviking_server_cors_origins | to_json }}{% if openviking_server_root_api_key | length > 0 %},
-    "root_api_key": {{ openviking_server_root_api_key | to_json }}{% endif %}
+    "cors_origins": {{ openviking_server_cors_origins | to_json }},
+    "root_api_key": {{ openviking_server_root_api_key | to_json }}
   }
 }
