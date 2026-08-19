@@ -151,6 +151,24 @@ docker run -d --name my-ubuntu dokken/ubuntu-26.04 sleep infinity
 make hermes EXTRA_VARS='-e hermes_api_server_key=YOUR_KEY -e deepseek_api_key=sk-'
 ```
 
+## OpenViking as System Memory
+
+OpenViking can act as the memory layer of the system by storing and serving persistent context for agents and services. This is a good choice because it provides:
+
+- Persistent memory across restarts, so context is not lost between runs.
+- Centralized memory access for multiple components.
+- Provider/model configuration through an initialization wizard.
+- Built-in health checks (`doctor`) to validate configuration before production use.
+
+Setup and run:
+
+```bash
+pip install openviking --upgrade
+openviking-server init      # interactive wizard: providers, models, ov.conf
+openviking-server doctor    # validate setup
+openviking-server           # start (background: nohup openviking-server > openviking.log 2>&1 &)
+```
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
