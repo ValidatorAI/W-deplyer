@@ -8,9 +8,11 @@ User={{ openviking_user }}
 Group={{ openviking_user }}
 WorkingDirectory={{ openviking_dir }}
 Environment=OPENVIKING_CONFIG_FILE={{ openviking_dir }}/ov.conf
-ExecStart={{ openviking_venv_dir }}/bin/openviking-server
-Restart=on-failure
-RestartSec=5
+ExecStart={{ openviking_venv_dir }}/bin/openviking-server --host {{ openviking_server_host }} --port {{ openviking_server_port }}
+Restart=always
+RestartSec=3
+PrivateTmp=true
+NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
